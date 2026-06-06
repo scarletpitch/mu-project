@@ -14,7 +14,7 @@
       />
 
       <section v-if="selectedCard" class="daily-tarot__result mu-panel">
-        <span class="mu-small-label">ไพ่ของวันนี้</span>
+        <span class="mu-small-label">ไพ่วันนี้</span>
         <h2>{{ selectedCard.name }}</h2>
         <p>คำทำนายจะเพิ่มภายหลัง</p>
 
