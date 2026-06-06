@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 184" role="img" aria-label="Tarot card back">
+  <rect width="120" height="184" rx="10" fill="#eadffc"/>
+  <rect x="8" y="8" width="104" height="168" rx="7" fill="#4b2368"/>
+  <rect x="17" y="17" width="86" height="150" rx="4" fill="none" stroke="#d7c0ef" stroke-width="2"/>
+  <path d="M60 45l12 31 31 12-31 12-12 31-12-31-31-12 31-12 12-31z" fill="#d7c0ef" opacity=".9"/>
+  <circle cx="60" cy="92" r="16" fill="#5b2e7a"/>
+  <circle cx="60" cy="92" r="6" fill="#eadffc"/>
+</svg>

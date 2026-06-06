@@ -1,0 +1,9 @@
+@mixin touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+@mixin app-padding {
+  padding-right: clamp(18px, 5vw, 24px);
+  padding-left: clamp(18px, 5vw, 24px);
+}
