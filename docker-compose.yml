@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: madame_mu_postgres
+    environment:
+      POSTGRES_DB: madame_mu
+      POSTGRES_USER: madame_mu_user
+      POSTGRES_PASSWORD: madame_mu_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: madame_mu_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
