@@ -1,0 +1,20 @@
+export const tarotMeanings = [
+    {
+      cardId: 'the_world',
+      coreMeaning: '',
+      symbols: '',
+      keywords: ['การสิ้นสุด', 'การเปลี่ยนแปลง', 'ความสำเร็จ'],
+      generalSituation: '',
+      personality: '',
+      work: '',
+      study: '',
+      finance: '',
+      loveAndRelationship: '',
+      singleLove: '',
+      health: '',
+      timingSpeed: 'เปลี่ยนแปลงช้า ในระดับเดือนถึงปี',
+      timingPeriod: '21 ธันวาคม - 20 มกราคม',
+      timingNote: '',
+      summary: '',
+    },
+  ]
