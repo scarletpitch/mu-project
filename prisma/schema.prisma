@@ -6,3 +6,60 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Arcana {
+  major
+  minor
+}
+
+enum Suit {
+  wands
+  cups
+  swords
+  pentacles
+}
+
+model TarotCard {
+  id           String    @id
+  nameEn       String
+  nameTh       String?
+  arcana       Arcana
+  suit         Suit?
+  number       Int?
+  rank         String?
+  imageUrl     String?
+  backImageUrl String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  meaning TarotCardMeaning?
+
+  @@index([arcana])
+  @@index([suit])
+}
+
+model TarotCardMeaning {
+  id                  String   @id @default(cuid())
+  cardId              String   @unique
+  coreMeaning         String?  @db.Text
+  symbols             String?  @db.Text
+  keywords            String[]
+  generalSituation    String?  @db.Text
+  personality         String?  @db.Text
+  work                String?  @db.Text
+  study               String?  @db.Text
+  finance             String?  @db.Text
+  loveAndRelationship String?  @db.Text
+  singleLove          String?  @db.Text
+  health              String?  @db.Text
+  timingSpeed         String?
+  timingPeriod        String?
+  timingNote          String?  @db.Text
+  summary             String?  @db.Text
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  card TarotCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+}

@@ -35,23 +35,36 @@ The default `.env` already has the correct local `DATABASE_URL` for Docker.
 
 ### Generate Prisma client
 
-Once you have added models to `prisma/schema.prisma`, generate the client:
-
 ```bash
 npm run prisma:generate
 ```
 
-The schema is currently baseline-only (no models). `npx prisma validate` confirms it is valid and ready for models to be added.
+### Run migrations
 
-### Run migrations (when models are added)
-
-Once database models are defined in `prisma/schema.prisma`, run:
+**Local development** — creates a new migration file and applies it. You will be prompted for a migration name:
 
 ```bash
 npm run prisma:migrate
+# equivalent: npx prisma migrate dev --name <migration-name>
 ```
 
-You will be prompted for a migration name.
+**Apply existing migrations without prompts** (e.g. after pulling changes from git):
+
+```bash
+npx prisma migrate deploy
+```
+
+**Seed the database** (78 tarot cards + placeholder meanings):
+
+```bash
+npm run db:seed
+```
+
+**Reset everything** — drops the database, re-applies all migrations, and re-seeds:
+
+```bash
+npm run prisma:reset
+```
 
 ### Start the dev server
 
