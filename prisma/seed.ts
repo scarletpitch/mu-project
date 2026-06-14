@@ -1,4 +1,5 @@
 import { PrismaClient, Arcana, Suit } from '@prisma/client'
+import { tarotMeanings } from '../data/tarotMeanings'
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,12 @@ type CardSeed = {
   suit?: Suit
   number?: number
   rank?: string
+  imageUrl?: string
+  backImageUrl?: string
 }
+
+const cardImageUrl = '/images/tarot-face-placeholder.svg'
+const backImageUrl = '/images/madamemu-tarot-back.svg'
 
 const majorArcana: CardSeed[] = [
   { id: 'the_fool',          nameEn: 'The Fool',          arcana: 'major', number: 0  },
@@ -71,10 +77,14 @@ const minorArcana: CardSeed[] = suits.flatMap(({ suit, nameEn: suitName }) =>
   }))
 )
 
-const allCards: CardSeed[] = [...majorArcana, ...minorArcana]
+const allCards: CardSeed[] = [...majorArcana, ...minorArcana].map((card) => ({
+  ...card,
+  imageUrl: card.imageUrl ?? cardImageUrl,
+  backImageUrl: card.backImageUrl ?? backImageUrl,
+}))
 
 async function main() {
-  console.log(`Seeding ${allCards.length} tarot cards…`)
+  console.log(`Seeding ${allCards.length} tarot cards...`)
 
   for (const card of allCards) {
     await prisma.tarotCard.upsert({
@@ -82,31 +92,54 @@ async function main() {
       update: {
         nameEn: card.nameEn,
         arcana: card.arcana,
-        suit:   card.suit   ?? null,
+        suit: card.suit ?? null,
         number: card.number ?? null,
-        rank:   card.rank   ?? null,
+        rank: card.rank ?? null,
+        imageUrl: card.imageUrl ?? null,
+        backImageUrl: card.backImageUrl ?? null,
       },
       create: {
-        id:     card.id,
+        id: card.id,
         nameEn: card.nameEn,
         arcana: card.arcana,
-        suit:   card.suit   ?? null,
+        suit: card.suit ?? null,
         number: card.number ?? null,
-        rank:   card.rank   ?? null,
+        rank: card.rank ?? null,
+        imageUrl: card.imageUrl ?? null,
+        backImageUrl: card.backImageUrl ?? null,
       },
     })
 
     await prisma.tarotCardMeaning.upsert({
-      where:  { cardId: card.id },
+      where: { cardId: card.id },
       update: {},
       create: {
-        cardId:   card.id,
+        cardId: card.id,
         keywords: [],
       },
     })
   }
 
-  console.log(`Done. ${allCards.length} cards and ${allCards.length} meanings seeded.`)
+  console.log(`Seeding ${tarotMeanings.length} tarot meaning records...`)
+
+  for (const meaning of tarotMeanings) {
+    const { cardId, ...meaningData } = meaning
+
+    await prisma.tarotCardMeaning.upsert({
+      where: { cardId },
+      update: {
+        ...meaningData,
+        keywords: meaning.keywords ?? [],
+      },
+      create: {
+        cardId,
+        ...meaningData,
+        keywords: meaning.keywords ?? [],
+      },
+    })
+  }
+
+  console.log(`Done. ${allCards.length} cards seeded. ${tarotMeanings.length} meanings updated.`)
 }
 
 main()

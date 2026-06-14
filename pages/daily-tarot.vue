@@ -13,24 +13,11 @@
         @select="selectCard"
       />
 
-      <section v-if="selectedCard" class="daily-tarot__result mu-panel">
-        <span class="mu-small-label">ไพ่วันนี้</span>
-        <h2>{{ selectedCard.name }}</h2>
-        <p>คำทำนายจะเพิ่มภายหลัง</p>
+      <div v-if="selectedCard" class="daily-tarot__reading-cta">
+        <MuButton @click="goToReading">ดูคำทำนาย</MuButton>
+      </div>
 
-        <div v-if="fullReadingUnlocked" class="daily-tarot__full">
-          คำทำนายฉบับเต็มจะเพิ่มภายหลัง
-        </div>
-
-        <div v-else class="daily-tarot__unlock">
-          <MuButton :disabled="unlockPending" @click="unlockFullReading">
-            {{ unlockPending ? 'กำลังปลดล็อก...' : 'ปลดล็อกคำทำนายเต็ม 1 เครดิต' }}
-          </MuButton>
-          <MuButton v-if="insufficientCredits" to="/topup" variant="ghost">เติมเครดิต</MuButton>
-        </div>
-      </section>
-
-      <div class="daily-tarot__action">
+      <div v-if="!selectedCard" class="daily-tarot__action">
         <MuButton :disabled="isAnimating" @click="shuffleCards">
           {{ isAnimating ? 'กำลังสับไพ่...' : 'สับไพ่' }}
         </MuButton>
@@ -54,26 +41,18 @@ import type { TarotAnimationState } from '~/components/TarotFan.vue'
 
 useHead({ title: 'ดูไพ่ยิปซีแบบรายวัน | Madame Mu' })
 
-interface SpendResponse {
-  success: boolean
-  newCreditBalance: number
-  error?: 'INSUFFICIENT_CREDITS'
-}
-
-const visibleCount = 9
-const userId = 'local-user'
+const visibleCount = 78
 const animationState = ref<TarotAnimationState>('idleFan')
 const visibleCards = ref<TarotCardData[]>(tarotDeck.slice(0, visibleCount))
 const selectedIndex = ref<number | null>(null)
 const sessionId = ref(createId('daily_tarot'))
-const unlockPending = ref(false)
-const insufficientCredits = ref(false)
-const fullReadingUnlocked = ref(false)
 const timers: number[] = []
 
-const isAnimating = computed(() => ['gathering', 'shuffling', 'dealing'].includes(animationState.value))
+const isAnimating = computed(() => ['gathering', 'shuffling', 'dealing', 'zooming'].includes(animationState.value))
 const canPick = computed(() => animationState.value === 'readyToPick' && !isAnimating.value)
-const selectedCard = computed(() => (selectedIndex.value === null ? null : visibleCards.value[selectedIndex.value]))
+const selectedCard = computed(() => (
+  selectedIndex.value === null || animationState.value !== 'revealed' ? null : visibleCards.value[selectedIndex.value]
+))
 
 function setStateAfter(state: TarotAnimationState, delay: number) {
   timers.push(window.setTimeout(() => {
@@ -87,8 +66,6 @@ function shuffleCards() {
 
   sessionId.value = createId('daily_tarot')
   selectedIndex.value = null
-  insufficientCredits.value = false
-  fullReadingUnlocked.value = false
   visibleCards.value = shuffleArray(tarotDeck).slice(0, visibleCount)
 
   animationState.value = 'gathering'
@@ -103,33 +80,22 @@ function selectCard(index: number) {
   }
 
   selectedIndex.value = index
-  animationState.value = 'revealed'
+  animationState.value = 'zooming'
+  setStateAfter('revealed', 720)
 }
 
-async function unlockFullReading() {
-  if (!selectedCard.value || fullReadingUnlocked.value) {
+function goToReading() {
+  if (!selectedCard.value) {
     return
   }
 
-  unlockPending.value = true
-  insufficientCredits.value = false
-
-  try {
-    const result = await $fetch<SpendResponse>('/api/credits/spend', {
-      method: 'POST',
-      body: {
-        userId,
-        featureKey: 'daily_tarot_full_reading',
-        amount: 1,
-        referenceId: sessionId.value
-      }
-    })
-
-    fullReadingUnlocked.value = result.success
-    insufficientCredits.value = result.error === 'INSUFFICIENT_CREDITS'
-  } finally {
-    unlockPending.value = false
-  }
+  navigateTo({
+    path: '/daily-tarot-reading',
+    query: {
+      cardId: selectedCard.value.id,
+      sessionId: sessionId.value
+    }
+  })
 }
 
 onBeforeUnmount(() => {
@@ -160,41 +126,19 @@ onBeforeUnmount(() => {
   line-height: 1.18;
 }
 
-.daily-tarot__result {
-  width: 100%;
-  margin: -18px auto 16px;
-  padding: 14px 16px;
-  text-align: center;
-}
-
-.daily-tarot__result h2 {
-  margin: 6px 0 0;
-  font-size: 20px;
-}
-
-.daily-tarot__result p {
-  margin: 6px 0 0;
-  color: $mu-muted;
-  font-size: 14px;
-}
-
-.daily-tarot__unlock {
-  display: grid;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.daily-tarot__full {
-  margin-top: 12px;
-  border-top: 1px solid $mu-line;
-  padding-top: 12px;
-  color: $mu-lavender-soft;
-  font-size: 14px;
-  line-height: 1.5;
+.daily-tarot__reading-cta {
+  position: fixed;
+  top: min(calc(50dvh + 300px), calc(100dvh - 108px));
+  left: 50%;
+  z-index: 1001;
+  width: min(calc(100vw - 48px), 320px);
+  transform: translateX(-50%);
 }
 
 .daily-tarot__action {
-  width: 100%;
+  justify-self: center;
+  width: 40%;
+  margin-top: clamp(-150px, -18svh, -80px);
 }
 
 .daily-tarot__links {
