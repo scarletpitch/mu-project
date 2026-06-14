@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import type { TarotCardData } from '~/data/tarotDeck'
 
-export type TarotAnimationState = 'idleFan' | 'gathering' | 'shuffling' | 'dealing' | 'readyToPick' | 'revealed'
+export type TarotAnimationState = 'idleFan' | 'gathering' | 'shuffling' | 'dealing' | 'readyToPick' | 'zooming' | 'revealed'
 
 const props = defineProps<{
   cards: TarotCardData[]
@@ -33,67 +33,54 @@ defineEmits<{
   select: [index: number]
 }>()
 
-const fanPositions = computed(() => {
-  const total = props.cards.length
-  const center = (total - 1) / 2
-  const spread = 18
-
-  return props.cards.map((_, index) => {
-    const offset = index - center
-    const normalized = center === 0 ? 0 : offset / center
-
-    return {
-      x: normalized * 124,
-      y: Math.abs(normalized) * 38 - 8,
-      rotate: normalized * spread,
-      delay: index * 42
-    }
-  })
-})
+const columns = 13
 
 function slotStyle(index: number) {
-  const item = fanPositions.value[index]
-  const center = (props.cards.length - 1) / 2
+  const row = Math.floor(index / columns)
+  const column = index % columns
 
   return {
-    '--fan-x': `${item.x}%`,
-    '--fan-y': `${item.y}%`,
-    '--fan-r': `${item.rotate}deg`,
-    '--slot-delay': `${item.delay}ms`,
-    '--deck-z': `${100 - Math.abs(index - center)}`
+    '--slot-row': row + 1,
+    '--slot-column': column + 1,
+    '--slot-delay': `${index * 12}ms`,
+    '--deck-z': index + 1
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .tarot-fan {
-  --card-w: clamp(48px, 15.2vw, 66px);
+  --card-w: 120%;
+  --row-step: clamp(45px, 10.7vw, 55px);
 
-  position: relative;
-  width: min(100%, 390px);
-  height: clamp(210px, 57svh, 318px);
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  grid-template-rows: repeat(6, var(--row-step));
+  justify-content: center;
+  align-content: center;
+  width: min(96%, 384px);
+  min-height: calc((var(--row-step) * 5) + 78px);
+  margin: clamp(-52px, -6svh, -24px) auto 0;
+  overflow: visible;
 }
 
 .tarot-fan__slot {
-  position: absolute;
-  top: 47%;
-  left: 50%;
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  grid-row: var(--slot-row);
+  grid-column: var(--slot-column);
   z-index: var(--deck-z);
-  transform:
-    translate(-50%, -50%)
-    translate(var(--fan-x), var(--fan-y))
-    rotate(var(--fan-r));
-  transform-origin: 50% 86%;
+  transform: translateY(0) scale(1);
   transition:
-    transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 220ms ease;
   transition-delay: var(--slot-delay);
 }
 
 .tarot-fan--gathering .tarot-fan__slot,
 .tarot-fan--shuffling .tarot-fan__slot {
-  transform: translate(-50%, -50%) translate(0, 0) rotate(0deg);
+  transform: translateY(0) scale(0.96);
   transition-delay: 0ms;
 }
 
@@ -110,34 +97,60 @@ function slotStyle(index: number) {
   transition-delay: var(--slot-delay);
 }
 
+.tarot-fan--zooming .tarot-fan__slot:not(.tarot-fan__slot--selected),
 .tarot-fan--revealed .tarot-fan__slot:not(.tarot-fan__slot--selected) {
-  opacity: 0.38;
+  opacity: 0;
+  pointer-events: none;
 }
 
+.tarot-fan--zooming .tarot-fan__slot--selected,
 .tarot-fan--revealed .tarot-fan__slot--selected {
-  z-index: 50;
-  transform: translate(-50%, -50%) translate(0, -8%) rotate(0deg) scale(1.18);
+  --card-w: min(74vw, 300px);
+
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  width: var(--card-w);
+  transform: translate(-50%, -50%) scale(1);
+  transition-delay: 0ms;
+}
+
+.tarot-fan--zooming .tarot-fan__slot--selected {
+  animation: card-zoom 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes card-zoom {
+  0% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.22);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 @keyframes shuffle-left {
   0%,
   100% {
-    transform: translate(-50%, -50%) translate(-3px, 0) rotate(-1deg);
+    transform: translateX(-2px) scale(0.96);
   }
 
   50% {
-    transform: translate(-50%, -50%) translate(-22px, -2px) rotate(-6deg);
+    transform: translateX(-6px) scale(0.96);
   }
 }
 
 @keyframes shuffle-right {
   0%,
   100% {
-    transform: translate(-50%, -50%) translate(3px, 0) rotate(1deg);
+    transform: translateX(2px) scale(0.96);
   }
 
   50% {
-    transform: translate(-50%, -50%) translate(22px, 2px) rotate(6deg);
+    transform: translateX(6px) scale(0.96);
   }
 }
 </style>

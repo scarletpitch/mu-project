@@ -10,7 +10,8 @@ export interface TarotCardData {
   backImage: string
 }
 
-const backImage = '/images/tarot-back.svg'
+const backImage = '/images/madamemu-tarot-back.svg'
+// const backImage = '/images/tarot-back.svg'
 const cardImage = '/images/tarot-face-placeholder.svg'
 
 const majorNames = [

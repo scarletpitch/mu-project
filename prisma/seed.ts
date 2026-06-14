@@ -10,7 +10,12 @@ type CardSeed = {
   suit?: Suit
   number?: number
   rank?: string
+  imageUrl?: string
+  backImageUrl?: string
 }
+
+const cardImageUrl = '/images/tarot-face-placeholder.svg'
+const backImageUrl = '/images/madamemu-tarot-back.svg'
 
 const majorArcana: CardSeed[] = [
   { id: 'the_fool',          nameEn: 'The Fool',          arcana: 'major', number: 0  },
@@ -72,7 +77,11 @@ const minorArcana: CardSeed[] = suits.flatMap(({ suit, nameEn: suitName }) =>
   }))
 )
 
-const allCards: CardSeed[] = [...majorArcana, ...minorArcana]
+const allCards: CardSeed[] = [...majorArcana, ...minorArcana].map((card) => ({
+  ...card,
+  imageUrl: card.imageUrl ?? cardImageUrl,
+  backImageUrl: card.backImageUrl ?? backImageUrl,
+}))
 
 async function main() {
   console.log(`Seeding ${allCards.length} tarot cards...`)
@@ -86,6 +95,8 @@ async function main() {
         suit: card.suit ?? null,
         number: card.number ?? null,
         rank: card.rank ?? null,
+        imageUrl: card.imageUrl ?? null,
+        backImageUrl: card.backImageUrl ?? null,
       },
       create: {
         id: card.id,
@@ -94,6 +105,8 @@ async function main() {
         suit: card.suit ?? null,
         number: card.number ?? null,
         rank: card.rank ?? null,
+        imageUrl: card.imageUrl ?? null,
+        backImageUrl: card.backImageUrl ?? null,
       },
     })
 

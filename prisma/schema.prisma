@@ -32,7 +32,8 @@ model TarotCard {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  meaning TarotCardMeaning?
+  meaning      TarotCardMeaning?
+  readingCards ReadingCard[]
 
   @@index([arcana])
   @@index([suit])
@@ -62,4 +63,80 @@ model TarotCardMeaning {
   card TarotCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@index([cardId])
+}
+
+model ReadingSession {
+  id               String    @id @default(cuid())
+  readingType      String
+  category         String?
+  questionText     String?   @db.Text
+  mode             String    @default("test")
+  algorithmVersion String
+  promptVersion    String?
+  aiModel          String?
+  status           String    @default("created")
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  cards  ReadingCard[]
+  output ReadingOutput?
+  review InternalReadingReview?
+
+  @@index([readingType])
+  @@index([status])
+  @@index([category])
+}
+
+model ReadingCard {
+  id                     String   @id @default(cuid())
+  readingSessionId       String
+  cardId                 String
+  positionIndex          Int
+  positionKey            String
+  positionLabel          String
+  meaningSnapshot        Json
+  keywordsSnapshot       String[]
+  interpretationSnapshot String?  @db.Text
+  createdAt              DateTime @default(now())
+
+  readingSession ReadingSession @relation(fields: [readingSessionId], references: [id], onDelete: Cascade)
+  card           TarotCard      @relation(fields: [cardId], references: [id])
+
+  @@index([readingSessionId])
+  @@index([cardId])
+}
+
+model ReadingOutput {
+  id                String   @id @default(cuid())
+  readingSessionId  String   @unique
+  structuredOutline Json
+  algorithmText     String?  @db.Text
+  aiPrompt          Json?
+  aiOutput          String?  @db.Text
+  finalOutput       String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  readingSession ReadingSession @relation(fields: [readingSessionId], references: [id], onDelete: Cascade)
+}
+
+model InternalReadingReview {
+  id               String    @id @default(cuid())
+  readingSessionId String    @unique
+  ratingOverall    Int?
+  ratingAccuracy   Int?
+  ratingTone       Int?
+  ratingUsefulness Int?
+  isApproved       Boolean   @default(false)
+  reviewStatus     String    @default("pending")
+  reviewNote       String?   @db.Text
+  suggestedFix     String?   @db.Text
+  reviewedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  readingSession ReadingSession @relation(fields: [readingSessionId], references: [id], onDelete: Cascade)
+
+  @@index([reviewStatus])
+  @@index([isApproved])
 }
