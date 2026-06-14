@@ -33,17 +33,28 @@ defineEmits<{
   select: [index: number]
 }>()
 
-const columns = 13
+const cardsPerRow = 13
+const totalCards = computed(() => props.cards.length)
 
 function slotStyle(index: number) {
-  const row = Math.floor(index / columns)
-  const column = index % columns
+  const row = Math.floor(index / cardsPerRow)
+  const column = index % cardsPerRow
+  const centerColumn = (cardsPerRow - 1) / 2
+  const centerRow = Math.max((Math.ceil(totalCards.value / cardsPerRow) - 1) / 2, 0)
+  const dealDelay = index * 42
+  const deckOffset = (index % 5) - 2
 
   return {
     '--slot-row': row + 1,
     '--slot-column': column + 1,
-    '--slot-delay': `${index * 12}ms`,
-    '--deck-z': index + 1
+    '--gather-x': `${(centerColumn - column) * 100}%`,
+    '--gather-y': `calc(${centerRow - row} * var(--row-step))`,
+    '--deck-offset-x': `${deckOffset * 0.55}px`,
+    '--deck-offset-y': `${((index % 7) - 3) * 0.32}px`,
+    '--deck-r': `${deckOffset * 0.45}deg`,
+    '--deal-r': `${((column % 3) - 1) * 0.6}deg`,
+    '--slot-delay': `${dealDelay}ms`,
+    '--deck-z': totalCards.value - index
   }
 }
 </script>
@@ -60,7 +71,7 @@ function slotStyle(index: number) {
   align-content: center;
   width: min(96%, 384px);
   min-height: calc((var(--row-step) * 5) + 78px);
-  margin: clamp(-52px, -6svh, -24px) auto 0;
+  margin: clamp(-76px, -8svh, -40px) auto 0;
   overflow: visible;
 }
 
@@ -71,17 +82,29 @@ function slotStyle(index: number) {
   grid-row: var(--slot-row);
   grid-column: var(--slot-column);
   z-index: var(--deck-z);
-  transform: translateY(0) scale(1);
+  opacity: 1;
+  transform: translateY(0) rotate(0deg) scale(1);
   transition:
-    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 220ms ease;
   transition-delay: var(--slot-delay);
 }
 
 .tarot-fan--gathering .tarot-fan__slot,
 .tarot-fan--shuffling .tarot-fan__slot {
-  transform: translateY(0) scale(0.96);
+  transform:
+    translate(
+      calc(var(--gather-x) + var(--deck-offset-x)),
+      calc(var(--gather-y) + var(--deck-offset-y))
+    )
+    rotate(var(--deck-r))
+    scale(0.96);
   transition-delay: 0ms;
+}
+
+.tarot-fan--gathering .tarot-fan__slot :deep(.tarot-card__face),
+.tarot-fan--shuffling .tarot-fan__slot :deep(.tarot-card__face) {
+  box-shadow: none;
 }
 
 .tarot-fan--shuffling .tarot-fan__slot:nth-child(odd) {
@@ -93,7 +116,8 @@ function slotStyle(index: number) {
 }
 
 .tarot-fan--dealing .tarot-fan__slot {
-  transition-duration: 760ms;
+  animation: deal-settle 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--slot-delay);
   transition-delay: var(--slot-delay);
 }
 
@@ -132,25 +156,47 @@ function slotStyle(index: number) {
   }
 }
 
+@keyframes deal-settle {
+  0% {
+    opacity: 0.92;
+    transform:
+      translate(
+        calc(var(--gather-x) + var(--deck-offset-x)),
+        calc(var(--gather-y) + var(--deck-offset-y))
+      )
+      rotate(var(--deck-r))
+      scale(0.96);
+  }
+
+  72% {
+    transform: translateY(-2px) rotate(var(--deal-r)) scale(1.015);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
 @keyframes shuffle-left {
   0%,
   100% {
-    transform: translateX(-2px) scale(0.96);
+    transform: translate(calc(var(--gather-x) + var(--deck-offset-x) - 2px), calc(var(--gather-y) + var(--deck-offset-y))) rotate(calc(var(--deck-r) - 0.6deg)) scale(0.96);
   }
 
   50% {
-    transform: translateX(-6px) scale(0.96);
+    transform: translate(calc(var(--gather-x) + var(--deck-offset-x) - 10px), calc(var(--gather-y) + var(--deck-offset-y) - 1px)) rotate(calc(var(--deck-r) - 1.8deg)) scale(0.96);
   }
 }
 
 @keyframes shuffle-right {
   0%,
   100% {
-    transform: translateX(2px) scale(0.96);
+    transform: translate(calc(var(--gather-x) + var(--deck-offset-x) + 2px), calc(var(--gather-y) + var(--deck-offset-y))) rotate(calc(var(--deck-r) + 0.6deg)) scale(0.96);
   }
 
   50% {
-    transform: translateX(6px) scale(0.96);
+    transform: translate(calc(var(--gather-x) + var(--deck-offset-x) + 10px), calc(var(--gather-y) + var(--deck-offset-y) + 1px)) rotate(calc(var(--deck-r) + 1.8deg)) scale(0.96);
   }
 }
 </style>

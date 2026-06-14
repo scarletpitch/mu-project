@@ -3,6 +3,16 @@
     <div class="daily-tarot">
       <header class="daily-tarot__header">
         <h1>ดูไพ่ยิปซีแบบรายวัน</h1>
+
+        <div class="daily-tarot__credits">
+          <span class="daily-tarot__credits-label">จำนวนเครดิต</span>
+          <div class="daily-tarot__credits-value">
+            <span>{{ creditBalance }}</span>
+            <NuxtLink to="/topup" class="daily-tarot__credits-add" aria-label="เติมเครดิต">
+              <img src="/images/add-button.svg" alt="">
+            </NuxtLink>
+          </div>
+        </div>
       </header>
 
       <TarotFan
@@ -42,6 +52,7 @@ import type { TarotAnimationState } from '~/components/TarotFan.vue'
 useHead({ title: 'ดูไพ่ยิปซีแบบรายวัน | Madame Mu' })
 
 const visibleCount = 78
+const { data: creditData } = useFetch<{ creditBalance: number }>('/api/credits/balance')
 const animationState = ref<TarotAnimationState>('idleFan')
 const visibleCards = ref<TarotCardData[]>(tarotDeck.slice(0, visibleCount))
 const selectedIndex = ref<number | null>(null)
@@ -53,6 +64,7 @@ const canPick = computed(() => animationState.value === 'readyToPick' && !isAnim
 const selectedCard = computed(() => (
   selectedIndex.value === null || animationState.value !== 'revealed' ? null : visibleCards.value[selectedIndex.value]
 ))
+const creditBalance = computed(() => creditData.value?.creditBalance ?? 0)
 
 function setStateAfter(state: TarotAnimationState, delay: number) {
   timers.push(window.setTimeout(() => {
@@ -69,9 +81,9 @@ function shuffleCards() {
   visibleCards.value = shuffleArray(tarotDeck).slice(0, visibleCount)
 
   animationState.value = 'gathering'
-  setStateAfter('shuffling', 650)
-  setStateAfter('dealing', 1800)
-  setStateAfter('readyToPick', 2850)
+  setStateAfter('shuffling', 720)
+  setStateAfter('dealing', 1700)
+  setStateAfter('readyToPick', 5800)
 }
 
 function selectCard(index: number) {
@@ -126,6 +138,60 @@ onBeforeUnmount(() => {
   line-height: 1.18;
 }
 
+.daily-tarot__credits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.daily-tarot__credits-label {
+  color: $mu-cream;
+  font-size: clamp(21px, 5.6vw, 27px);
+  font-weight: 850;
+  line-height: 1;
+}
+
+.daily-tarot__credits-value {
+  display: grid;
+  grid-template-columns: 1fr 36px;
+  align-items: center;
+  width: min(45vw, 180px);
+  min-height: 42px;
+  overflow: hidden;
+  border-radius: $radius-pill;
+  background: $mu-cream;
+  color: $mu-purple;
+}
+
+.daily-tarot__credits-value span {
+  min-width: 0;
+  padding-left: 18px;
+  font-size: clamp(22px, 5.4vw, 28px);
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+}
+
+.daily-tarot__credits-add {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.daily-tarot__credits-add img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .daily-tarot__reading-cta {
   position: fixed;
   top: min(calc(50dvh + 300px), calc(100dvh - 108px));
@@ -138,7 +204,7 @@ onBeforeUnmount(() => {
 .daily-tarot__action {
   justify-self: center;
   width: 40%;
-  margin-top: clamp(-150px, -18svh, -80px);
+  margin-top: clamp(-178px, -22svh, -104px);
 }
 
 .daily-tarot__links {
